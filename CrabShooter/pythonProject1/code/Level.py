@@ -10,6 +10,7 @@ from pygame.font import Font
 from code.Const import COLOR_WHITE, WIN_WIDTH, MENU_OPTION, EVENT_ENEMY
 from code.Entity import Entity
 from code.EntityFactory import EntityFactory
+from code.EntityMediator import EntityMediator
 
 
 class Level:
@@ -22,7 +23,7 @@ class Level:
         self.entity_list.append(EntityFactory.get_entity('Player1'))
         if menu_option in [MENU_OPTION[1], MENU_OPTION[2]]:
             self.entity_list.append(EntityFactory.get_entity('Player2'))
-        pygame.time.set_timer(EVENT_ENEMY, 3000) # a cada 2 segundos, EVENT_ENEMY fica verdadeiro
+        pygame.time.set_timer(EVENT_ENEMY, 3000)  # a cada 2 segundos, EVENT_ENEMY fica verdadeiro
 
     def run(self, ):
         pygame.mixer.init()
@@ -34,8 +35,16 @@ class Level:
             for ent in self.entity_list:
                 # desenha as entidades (background)
                 self.window.blit(source=ent.surf, dest=ent.rect)
-                self.level_text(14, f'fps:{clock.get_fps():.0f}', COLOR_WHITE, (WIN_WIDTH-40, 10))
                 ent.move()
+
+            # printa o fps em texto na tela
+            self.level_text(14, f'fps:{clock.get_fps():.0f}', COLOR_WHITE, (WIN_WIDTH - 40, 10))
+            self.level_text(14, f'ent:{len(self.entity_list)}', COLOR_WHITE, (WIN_WIDTH - 40, 20))
+            pygame.display.flip()
+
+            # verificar relacionamentos entre entidades
+            EntityMediator.verify_collision(entity_list=self.entity_list)
+            EntityMediator.verify_health(entity_list=self.entity_list)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -45,7 +54,7 @@ class Level:
                 if event.type == EVENT_ENEMY:
                     choice = random.choice(('Enemy1', 'Enemy2'))
                     self.entity_list.append(EntityFactory.get_entity(choice))
-            pygame.display.flip()
+
         pass
 
     def level_text(self, text_size: int, text: str, text_color: tuple, text_pos: tuple):
